@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 class HomePage extends StatefulWidget {
   final String? userName;
   const HomePage({
-    super.key, this.userName,
+    super.key,
+    this.userName,
   });
 
   @override
@@ -71,10 +72,10 @@ class _HomePageState extends State<HomePage> {
               ),
               BottomNavigationBarItem(
                 icon: Image.asset(
-                    'assets/icons/9035575_settings_outline_icon.png',
+                    'assets/icons/4092564_profile_about_mobile ui_user_icon.png',
                     width: 24,
                     height: 24),
-                label: 'Settings',
+                label: 'Profile',
               ),
             ],
           ),
