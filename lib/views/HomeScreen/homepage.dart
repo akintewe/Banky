@@ -41,6 +41,9 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: Stack(
         children: [
           BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            unselectedLabelStyle: TextStyle(color: Colors.black),
+            unselectedItemColor: Colors.black,
             selectedItemColor: Color.fromRGBO(28, 78, 191, 1),
             selectedIconTheme:
                 IconThemeData(color: Color.fromRGBO(28, 78, 191, 1)),
@@ -50,6 +53,8 @@ class _HomePageState extends State<HomePage> {
                 _currentIndex = index;
               });
             },
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
             items: [
               BottomNavigationBarItem(
                 icon: Image.asset('assets/icons/3844470_home_house_icon.png',
@@ -65,10 +70,10 @@ class _HomePageState extends State<HomePage> {
               ),
               BottomNavigationBarItem(
                 icon: Image.asset(
-                    'assets/icons/4753733_business_card_credit_credit card_dollar_icon.png',
+                    'assets/icons/9035575_settings_outline_icon.png',
                     width: 24,
                     height: 24),
-                label: 'Credit',
+                label: 'Settings',
               ),
               BottomNavigationBarItem(
                 icon: Image.asset(

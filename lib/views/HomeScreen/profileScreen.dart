@@ -83,31 +83,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Your Profile',
+                        'Hello, $firstName!',
                         style: TextStyle(
                             fontSize: 22, fontWeight: FontWeight.w700),
                       ),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => EditProfileScreen()));
-                        },
-                        child: Text(
-                          'Edit profile',
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color.fromRGBO(16, 47, 84, 1)),
-                        ),
-                      )
+                      // InkWell(
+                      //   onTap: () {
+                      //     Navigator.push(
+                      //         context,
+                      //         MaterialPageRoute(
+                      //             builder: (context) => EditProfileScreen()));
+                      //   },
+                      //   child: Text(
+                      //     'Edit profile',
+                      //     style: TextStyle(
+                      //         fontSize: 11,
+                      //         fontWeight: FontWeight.w600,
+                      //         color: Color.fromRGBO(16, 47, 84, 1)),
+                      //   ),
+                      // )
                     ],
                   ),
                 ),
                 SizedBox(
                   height: 15,
                 ),
+                Align(
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                        child: Image.asset('assets/images/male_avatar.png'))),
                 ProfileWidget(
                   title: 'Name',
                   image:

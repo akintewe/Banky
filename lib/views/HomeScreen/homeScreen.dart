@@ -4,8 +4,12 @@ import 'package:banky/services/helpers/storeUsername.dart';
 import 'package:banky/views/fundWalletScreen/fundWalletScreen.dart';
 import 'package:banky/views/sendMoneyScreen/sendMoney.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? userName;
@@ -16,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool isLoading = false;
   final userName = UserNameManager.userName;
 
   List<Map<String, dynamic>> itemList = [];
@@ -131,44 +136,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // final List<Map<String, dynamic>> itemList = [
-  //   {
-  //     'name': 'Maria May',
-  //     'time': 'Today, 10:00 AM',
-  //     'amount': '+\$700.00',
-  //     'image': 'assets/images/image1.png',
-  //     'amountColor': Colors.green, // Path to Alice's image
-  //   },
-  //   {
-  //     'name': 'Bolt',
-  //     'time': 'Debit Card, 07 May, 2023',
-  //     'amount': '-\$34.00',
-  //     'image': 'assets/images/bolt.png',
-  //     'amountColor': Colors.red, // Path to Alice's image
-  //   },
-  //   {
-  //     'name': 'KFC Resturant',
-  //     'time': 'Debit Card, 23 June, 2023',
-  //     'amount': '-\$200.00',
-  //     'image': 'assets/images/kfc.png',
-  //     'amountColor': Colors.red, // Path to Bob's image
-  //   },
-  //   {
-  //     'name': 'Uncle Jonathan',
-  //     'time': 'Credit, 25 June, 2023',
-  //     'amount': '+\$150.00',
-  //     'image': 'assets/images/image3.png',
-  //     'amountColor': Colors.green, // Path to Bob's image
-  //   },
-  //   {
-  //     'name': 'Peter Frank',
-  //     'time': 'Today, 11:30 AM',
-  //     'amount': '-\$650.00',
-  //     'image': 'assets/images/image2.png',
-  //     'amountColor': Colors.red, // Path to Bob's image
-  //   },
-  // ];
   Future<void> _fetchTransactionHistory() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       final apiUrl =
           'https://api.banky.ca/v1/transaction/history/${UserIdManager.id}';
@@ -194,17 +166,29 @@ class _HomeScreenState extends State<HomeScreen> {
         if (responseData.containsKey('status') && responseData['status']) {
           final List<dynamic> transactions = responseData['transactions'];
 
+          // Filter transactions based on the desired date and time
+          final DateTime targetDateTime = DateTime(2023, 5, 10, 13, 0);
+          final List<dynamic> filteredTransactions =
+              transactions.where((transaction) {
+            final DateTime transactionDateTime =
+                DateTime.parse(transaction['createdAt']);
+            return transactionDateTime.isAfter(targetDateTime);
+          }).toList();
+
           setState(() {
-            itemList = transactions.map((transaction) {
+            itemList = filteredTransactions.map((transaction) {
               String senderId = transaction['sender']['_id'];
               String recipientId = transaction['recipient']['_id'];
               bool isSender = senderId == UserIdManager.id;
+
+              final formattedTime = DateFormat('dd MMM yyyy - HH:mm a')
+                  .format(DateTime.parse(transaction['createdAt']));
 
               return {
                 'name': isSender
                     ? transaction['recipient']['firstName']
                     : transaction['sender']['firstName'],
-                'time': transaction['createdAt'],
+                'time': formattedTime,
                 'amount': transaction['amount'],
                 'amountColor': isSender ? Colors.red : Colors.green,
               };
@@ -221,6 +205,10 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       // Handle other errors
       print('Error: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -516,49 +504,57 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               )),
           Positioned(
-            top: 570,
+            top: 560,
             child: Container(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height * .3,
-              child: ListView.builder(
-                itemCount: itemList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  // Access data for each item from the itemList
-                  var item = itemList[index];
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: const Color.fromRGBO(245, 245, 245, 1),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          radius: 30,
-                          // Load image dynamically from the item data
-                          backgroundImage:
-                              AssetImage('assets/images/image2.png'),
-                        ),
-                        title: Text(
-                          item['name'],
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        subtitle: Text(item['time']),
-                        trailing: Text(
-                          '\$${item['amount'].toString()}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: item[
-                                'amountColor'], // Apply custom color to the amount text
+              child: isLoading
+                  ? Center(
+                      child: LoadingAnimationWidget.flickr(
+                          leftDotColor: Color.fromRGBO(54, 109, 233, 1),
+                          rightDotColor: Colors.white,
+                          size: 30),
+                    )
+                  : ListView.builder(
+                      itemCount: itemList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        // Access data for each item from the itemList
+                        var item = itemList[index];
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: const Color.fromRGBO(245, 245, 245, 1),
+                                borderRadius: BorderRadius.circular(20)),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                radius: 30,
+                                // Load image dynamically from the item data
+                                backgroundImage:
+                                    AssetImage('assets/images/image2.png'),
+                              ),
+                              title: Text(
+                                item['name'],
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              subtitle: Text(item['time']),
+                              trailing: Text(
+                                '\$${item['amount'].toString()}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: item[
+                                      'amountColor'], // Apply custom color to the amount text
+                                ),
+                              ),
+                              onTap: () {
+                                // Handle item tap
+                              },
+                            ),
                           ),
-                        ),
-                        onTap: () {
-                          // Handle item tap
-                        },
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           )
         ],
