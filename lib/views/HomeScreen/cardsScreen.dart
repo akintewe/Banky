@@ -1,6 +1,13 @@
+import 'dart:convert';
+import 'package:banky/services/helpers/storeToken.dart';
+import 'package:banky/views/HomeScreen/paymentSuccessScreen.dart';
+import 'package:custom_pin_keyboard/custom_pin_keyboard.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:banky/views/HomeScreen/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:u_credit_card/u_credit_card.dart';
 
 class CardsScreen extends StatefulWidget {
@@ -16,7 +23,9 @@ class _CardsScreenState extends State<CardsScreen> {
       TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _dueDateController = TextEditingController();
+  final TextEditingController pinController = TextEditingController();
   List<String> addedItems = [];
+  bool isLoading = false;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -33,6 +42,132 @@ class _CardsScreenState extends State<CardsScreen> {
             "${picked.day}/${picked.month}/${picked.year}";
       });
     }
+  }
+
+  Future<void> _createPaymentLink() async {
+    setState(() {
+      isLoading = true;
+    });
+   try {
+  final apiUrl = 'https://api.banky.ca/v1/payment/request/create';
+  final String userPin = pinController.text;
+  final token = UserTokenManager.token;
+
+  final response = await http.post(
+    Uri.parse(apiUrl),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'x-api-key':
+          '95c31583b2fdce5990a72d18e6efef5f:9c11c633d2157a0e662e3d879e888d920d6b8f9066f790d042510080f933b4b4',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'customers': addedItems,
+      'duedate': _dueDateController.text,
+      'amount': double.parse(_amountController.text),
+      'passcode': userPin,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+    if (responseData['status'] == true) {
+      String paymentLink =
+          responseData['paymentResult']['payment']['paymentLink'];
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              PaymentSuccessScreen(paymentLink: paymentLink),
+        ),
+      );
+
+      // TODO: Send the link to the added customers' emails
+      // You can use a service like Firebase Cloud Functions or your own server
+    } else {
+      // Handle API error
+      print('Error: ${responseData['message']}');
+    }
+  } else if (response.statusCode == 500) {
+    final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+    // Check if the response contains the expected error information
+    if (responseData.containsKey('status') &&
+        responseData['status'] == false &&
+        responseData.containsKey('error')) {
+      // Handle the specific error case
+      print('Error: ${responseData['error']}');
+    } else {
+      // Handle other cases where the response structure is not as expected
+      print('Invalid response structure for 500 error');
+    }
+  } else {
+    // Handle other HTTP status codes
+    print('HTTP Error: ${response.statusCode}');
+    print('Response body: ${response.body}');
+  }
+} catch (e) {
+  // Handle other errors
+  print('Error: $e');
+} finally {
+  setState(() {
+    isLoading = false;
+  });
+}
+
+  }
+
+  void _showPinKeyboardBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 600,
+          child: Column(
+            children: [
+              SizedBox(
+                height: 10,
+              ),
+              Align(
+                alignment: Alignment.center,
+                child: Text(
+                  'Enter your pin',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              SizedBox(
+                height: 400,
+                child: CustomPinKeyboard(
+                  controller: pinController,
+                  onCompleted: (pin) async {
+                    Navigator.pop(context);
+                    await _createPaymentLink();
+                  },
+                  indicatorBackground: Colors.black12,
+                  buttonBackground: Colors.transparent,
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    height: 32 / 24,
+                    fontSize: 24,
+                    color: Color.fromRGBO(16, 47, 84, 1),
+                  ),
+                  additionalButton:
+                      const Icon(Icons.ac_unit, color: Colors.blue),
+                  onAdditionalButtonPressed: () {
+                    // some additional action
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -380,15 +515,22 @@ class _CardsScreenState extends State<CardsScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           )),
-                      onPressed: () {},
+                      onPressed: () {
+                        _showPinKeyboardBottomSheet(context);
+                      },
                       child: Center(
-                        child: Text(
-                          'Create payment link',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                        child: isLoading
+                            ? LoadingAnimationWidget.flickr(
+                                leftDotColor: Color.fromRGBO(54, 109, 233, 1),
+                                rightDotColor: Colors.white,
+                                size: 30)
+                            : Text(
+                                'Create payment link',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                       )),
                 ),
               )
