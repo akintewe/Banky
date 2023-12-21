@@ -1,4 +1,6 @@
+import 'package:banky/views/HomeScreen/homepage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:u_credit_card/u_credit_card.dart';
 
 class CardsScreen extends StatefulWidget {
@@ -9,173 +11,389 @@ class CardsScreen extends StatefulWidget {
 }
 
 class _CardsScreenState extends State<CardsScreen> {
-  final List<Map<String, dynamic>> itemList = [
-    {
-      'name': 'Bolt',
-      'time': 'Debit Card, 07 May, 2023',
-      'amount': '-\$34.00',
-      'image': 'assets/images/bolt.png',
-      'amountColor': Colors.red, // Path to Alice's image
-    },
-    {
-      'name': 'Joseph',
-      'time': 'Transfer, 10 May, 2023',
-      'amount': '-\$650.00',
-      'image': 'assets/images/image2.png',
-      'amountColor': Colors.red, // Path to Bob's image
-    },
-    {
-      'name': 'Mark',
-      'time': 'Credit, 15 May, 2023',
-      'amount': '+\$1000.00',
-      'image': 'assets/images/image4.png',
-      'amountColor': Colors.green, // Path to Bob's image
-    },
-    {
-      'name': 'KFC Resturant',
-      'time': 'Debit Card, 23 June, 2023',
-      'amount': '-\$200.00',
-      'image': 'assets/images/kfc.png',
-      'amountColor': Colors.red, // Path to Bob's image
-    },
-    {
-      'name': 'Uncle Jonathan',
-      'time': 'Credit, 25 June, 2023',
-      'amount': '+\$150.00',
-      'image': 'assets/images/image3.png',
-      'amountColor': Colors.green, // Path to Bob's image
-    },
-  ];
+  final TextEditingController _paymentNameController = TextEditingController();
+  final TextEditingController _customersNameController =
+      TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _dueDateController = TextEditingController();
+  List<String> addedItems = [];
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101), // You can adjust the last date as needed
+    );
+
+    if (picked != null && picked != DateTime.now()) {
+      // User has selected a date
+      setState(() {
+        _dueDateController.text =
+            "${picked.day}/${picked.month}/${picked.year}";
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.15,
-            width: MediaQuery.of(context).size.width * 0.15,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: const Color.fromRGBO(54, 109, 233, 1)),
-            child: const Center(
-              child: Icon(
-                Icons.sort,
-                color: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+            children: [
+              SizedBox(
+                height: 30,
               ),
-            ),
-          ),
-        ),
-        title: const Text(
-          'My Cards',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
-      body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            const SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  'Create payment link',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22),
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Payment link name:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.92,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  color: Color.fromRGBO(245, 245, 245, 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
                 child: Row(
                   children: [
-                    CreditCardUi(
-                      topLeftColor: Colors.blue,
-                      cardHolderFullName: 'Nathan Akin',
-                      cardNumber: '\$23,456.08',
-                      validFrom: '01/23',
-                      validThru: '10/24',
-                      cardType: CardType.debit,
-                      doesSupportNfc: true,
-                      placeNfcIconAtTheEnd: true,
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.05,
+                        width: MediaQuery.of(context).size.width * 0.1,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: const Color.fromRGBO(16, 47, 84, 1)),
+                        child: Center(
+                            child: Image.asset(
+                          'assets/icons/4092564_profile_about_mobile ui_user_icon.png',
+                          color: Colors.white,
+                          height: 20,
+                        )),
+                      ),
                     ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    CreditCardUi(
-                      topLeftColor: Colors.pink,
-                      cardHolderFullName: 'Nathan Akin',
-                      cardNumber: '\$23,456.08',
-                      validFrom: '05/23',
-                      validThru: '09/24',
-                      cardType: CardType.credit,
-                      doesSupportNfc: true,
-                      placeNfcIconAtTheEnd: true,
+                    Expanded(
+                      child: TextField(
+                        controller: _paymentNameController,
+
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'e.g Payment for flowers',
+                          hintStyle: TextStyle(color: Colors.grey),
+                        ),
+
+                        // Other properties and handlers as needed
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(
-              height: 5,
-            ),
-            const Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Recent Activity',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    'View All',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  )
-                ],
+              SizedBox(
+                height: 10,
               ),
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height,
-              width: MediaQuery.of(context).size.width * 0.98,
-              child: ListView.builder(
-                itemCount: itemList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  // Access data for each item from the itemList
-                  var item = itemList[index];
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: const Color.fromRGBO(245, 245, 245, 1),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          radius: 30,
-                          // Load image dynamically from the item data
-                          backgroundImage: AssetImage(item['image']),
-                        ),
-                        title: Text(
-                          item['name'],
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        subtitle: Text(item['time']),
-                        trailing: Text(
-                          item['amount'],
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Amount:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.92,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  color: Color.fromRGBO(245, 245, 245, 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.05,
+                        width: MediaQuery.of(context).size.width * 0.1,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: const Color.fromRGBO(16, 47, 84, 1)),
+                        child: Center(
+                            child: Text(
+                          '\$',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: item[
-                                'amountColor'], // Apply custom color to the amount text
-                          ),
-                        ),
-                        onTap: () {
-                          // Handle item tap
-                        },
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              fontSize: 20),
+                        )),
                       ),
                     ),
-                  );
-                },
+                    Expanded(
+                      child: TextField(
+                        controller: _amountController,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'e.g \$500',
+                          hintStyle: TextStyle(color: Colors.grey),
+                        ),
+                        keyboardType: TextInputType.number,
+                        // Other properties and handlers as needed
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              SizedBox(
+                height: 10,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Due date:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => _selectDate(context),
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.92,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.0),
+                    color: Color.fromRGBO(245, 245, 245, 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: InkWell(
+                          onTap: () => _selectDate(context),
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.05,
+                            width: MediaQuery.of(context).size.width * 0.1,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: const Color.fromRGBO(16, 47, 84, 1)),
+                            child: Center(
+                                child: Image.asset(
+                              'assets/icons/216119_calender_icon.png',
+                              color: Colors.white,
+                              height: 20,
+                            )),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _selectDate(context),
+                          child: TextField(
+                            onTap: () => _selectDate(context),
+                            controller: _dueDateController,
+
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'e.g 05/12/2024',
+                              hintStyle: TextStyle(color: Colors.grey),
+                            ),
+
+                            // Other properties and handlers as needed
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Add customers:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.92,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  color: Color.fromRGBO(245, 245, 245, 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.05,
+                        width: MediaQuery.of(context).size.width * 0.1,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: const Color.fromRGBO(16, 47, 84, 1),
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            'assets/icons/3209291_contacts_customers_family_group_team_icon.png',
+                            color: Colors.white,
+                            height: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _customersNameController,
+                        onSubmitted: (value) {
+                          if (value.isNotEmpty) {
+                            setState(() {
+                              addedItems.add(value);
+                              _customersNameController.clear();
+                            });
+                          }
+                        },
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'e.g example@gmail.com',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          suffixIcon: addedItems.isNotEmpty
+                              ? Container(
+                                  width: 130,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: addedItems.length,
+                                    itemBuilder: (context, index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 4.0),
+                                        child: Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Color.fromRGBO(16, 47, 84, 1),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                addedItems[index],
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.cancel,
+                                                  color: Colors.white,
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    addedItems.removeAt(index);
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 50,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromRGBO(16, 47, 84, 1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          )),
+                      onPressed: () {},
+                      child: Center(
+                        child: Text(
+                          'Create payment link',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      )),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
